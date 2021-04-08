@@ -3,7 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = void 0;
 const vscode = require("vscode");
 function activate(context) {
-    const keywordsWithSubCommandsProvider = vscode.languages.registerCompletionItemProvider("nushell", {
+    console.log('Starting nushell extension activation');
+    //#region registerCompletionItemProvider for base commands and space commit char
+    const keywordCommandsProvider = vscode.languages.registerCompletionItemProvider("nushell", {
         provideCompletionItems(document, position, token, context) {
             const allCompletion = new vscode.CompletionItem("all?");
             allCompletion.commitCharacters = [" "];
@@ -354,6 +356,8 @@ function activate(context) {
             ];
         },
     });
+    //#endregion
+    //#region registerCompletionItemProvider for commands and subcommands with help
     const ansiSubCommandsProvider = vscode.languages.registerCompletionItemProvider("nushell", {
         provideCompletionItems(document, position) {
             const linePrefix = document
@@ -1029,6 +1033,68 @@ function activate(context) {
         },
     }, " ");
     context.subscriptions.push(ansiSubCommandsProvider, autoenvSubCommandsProvider, chartSubCommandsProvider, configSubCommandsProvider, dateSubCommandsProvider, dropSubCommandsProvider, eachSubCommandsProvider, formatSubCommandsProvider, fromSubCommandsProvider, groupBySubCommandsProvider, hashSubCommandsProvider, keepSubCommandsProvider, mathSubCommandsProvider, pathSubCommandsProvider, randomSubCommandsProvider, rollSubCommandsProvider, rotateSubCommandsProvider, seqSubCommandsProvider, skipSubCommandsProvider, splitSubCommandsProvider, strSubCommandsProvider, toSubCommandsProvider, urlSubCommandsProvider);
+    //#endregion
+    vscode.languages.registerHoverProvider('nushell', {
+        provideHover(document, position, token) {
+            const regex = new RegExp('\\w[-\\w.]*');
+            const wordRange = document.getWordRangeAtPosition(position, regex);
+            const word = document.getText(wordRange);
+            // const map = {
+            //     fox: new vscode.MarkdownString('wild'),
+            //     dog: new vscode.MarkdownString('domestic'),
+            // };
+            const wordMap = new Map();
+            wordMap.set('str', new vscode.MarkdownString('this is a string'));
+            wordMap.set('build-string', new vscode.MarkdownString('this build strings'));
+            wordMap.set('it.camel', new vscode.MarkdownString('## ITerator [Nushell](https://nushell.sh)'));
+            wordMap.set('echo', new vscode.MarkdownString("### Custom Command  `echo`" + "\n" +
+                "  " + "\n" +
+                "-----  " + "\n" +
+                "  " + "\n" +
+                "Examples:  " + "\n" +
+                "Put a hello message in the pipeline  " + "\n" +
+                "```nu  " + "\n" +
+                "> echo 'hello'  " + "\n" +
+                "```  " + "\n" +
+                "Print the value of the special '$nu' variable  " + "\n" +
+                "```nu  " + "\n" +
+                "> echo $nu  " + "\n" +
+                "```  " + "\n" +
+                "[help file](https://github.com/nushell/nushell/blob/main/docs/commands/echo.md)"));
+            wordMap.set('let', new vscode.MarkdownString("### function `EquivToProto`  " + "\n" +
+                "  " + "\n" +
+                "---  " + "\n" +
+                "→ `::testing::PolymorphicMatcher<internal::ProtoStringMatcher>`  " + "\n" +
+                "  " + "\n" +
+                "Parameters:  " + "\n" +
+                "  " + "\n" +
+                "- `const std::string & x`  " + "\n" +
+                "---  " + "\n" +
+                "```cpp  " + "\n" +
+                "// In namespace protobuf_matchers  " + "\n" +
+                "inline ::testing::PolymorphicMatcher<internal::ProtoStringMatcher> EquivToProto(  ```" + "\n"));
+            wordMap.set('each', '<span style="color:blue">some *blue* text</span>.');
+            wordMap.set('where', new vscode.MarkdownString("Examples:  " + "\n" +
+                "  List all files in the current directory with sizes greater than 2kb  " + "\n" +
+                "```nu  " + "\n" +
+                "  > ls | where size > 2kb  " + "\n" +
+                "```  " + "\n" +
+                "  List only the files in the current directory  " + "\n" +
+                "```nu  " + "\n" +
+                "  > ls | where type == File  " + "\n" +
+                "```  " + "\n" +
+                "  List all files with names that contain 'Car'  " + "\n" +
+                "```nu  " + "\n" +
+                "  > ls | where name =~ 'Car'  " + "\n" +
+                "```  " + "\n" +
+                "  List all files that were modified in the last two weeks  " + "\n" +
+                "```nu  " + "\n" +
+                "  > ls | where modified <= 2wk  " + "\n" +
+                "```  " + "\n"));
+            return new vscode.Hover(wordMap.get(word), wordRange);
+        }
+    });
+    console.log('Finished activating nushell extension');
 }
 exports.activate = activate;
 //# sourceMappingURL=extension.js.map
